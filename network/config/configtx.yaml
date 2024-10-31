@@ -1,0 +1,179 @@
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: ../organizations/ordererOrganizations/wasteManagement.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+    OrdererEndpoints:
+      - orderer.wasteManagement.com:7050
+
+  - &wasteCollectionCompany
+    Name: wasteCollectionCompanyMSP
+    ID: wasteCollectionCompanyMSP
+    MSPDir: ../organizations/peerOrganizations/wasteCollectionCompany.wasteManagement.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('wasteCollectionCompanyMSP.admin', 'wasteCollectionCompanyMSP.peer', 'wasteCollectionCompanyMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('wasteCollectionCompanyMSP.admin', 'wasteCollectionCompanyMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('wasteCollectionCompanyMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('wasteCollectionCompanyMSP.peer')"
+  
+  - &recyclingcenter
+    Name: recyclingcenterMSP
+    ID: recyclingcenterMSP
+    MSPDir: ../organizations/peerOrganizations/recyclingcenter.wasteManagement.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('recyclingcenterMSP.admin', 'recyclingcenterMSP.peer', 'recyclingcenterMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('recyclingcenterMSP.admin', 'recyclingcenterMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('recyclingcenterMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('recyclingcenterMSP.peer')"
+
+  - &government
+    Name: governmentMSP
+    ID: governmentMSP
+    MSPDir: ../organizations/peerOrganizations/government.wasteManagement.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('governmentMSP.admin', 'governmentMSP.peer', 'governmentMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('governmentMSP.admin', 'governmentMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('governmentMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('governmentMSP.peer')"
+
+  - &manufacture
+    Name: manufactureMSP
+    ID: manufactureMSP
+    MSPDir: ../organizations/peerOrganizations/manufacture.wasteManagement.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('manufactureMSP.admin', 'manufactureMSP.peer', 'manufactureMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('manufactureMSP.admin', 'manufactureMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('manufactureMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('manufactureMSP.peer')"
+
+Capabilities:  
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_5: true
+    
+Application: &ApplicationDefaults
+  Organizations: []
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  Addresses:
+    - orderer.wasteManagement.com:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations: []
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  ChannelUsingRaft:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      OrdererType: etcdraft
+      EtcdRaft:
+        Consenters:
+          - Host: orderer.wasteManagement.com
+            Port: 7050
+            ClientTLSCert: ../organizations/ordererOrganizations/wasteManagement.com/orderers/orderer.wasteManagement.com/tls/server.crt
+            ServerTLSCert: ../organizations/ordererOrganizations/wasteManagement.com/orderers/orderer.wasteManagement.com/tls/server.crt
+      Organizations:
+        - *OrdererOrg
+      Capabilities: *OrdererCapabilities
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *wasteCollectionCompany
+        - *recyclingcenter
+        - *government
+        - *manufacture
+      Capabilities: *ApplicationCapabilities
