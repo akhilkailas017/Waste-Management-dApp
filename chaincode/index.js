@@ -4,8 +4,8 @@
 
 "use strict";
 
-const WasteManagementContract = require("./lib/WasteManagementContract");
+const Waste = require("./lib/waste");
 
-module.exports.WasteManagementContract = WasteManagementContract;
+module.exports.Waste = Waste;
 
-module.exports.contracts = [WasteManagementContract];
+module.exports.contracts = [Waste];
