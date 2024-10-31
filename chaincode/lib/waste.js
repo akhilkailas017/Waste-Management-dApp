@@ -57,7 +57,7 @@ class Waste extends Contract {
 
     async upsertWasteDetails(ctx, wasteId, reusableWeight, owner) {
         const mspID = ctx.clientIdentity.getMSPID();
-        if (mspID !== "wasteCollectionCompanyMSP") {
+        if (mspID !== "recyclingcenterMSP") {
             throw new Error("Unauthorized MSP");
         }
         const exists = await this.wasteExists(ctx, wasteId);
@@ -86,7 +86,7 @@ class Waste extends Contract {
 
     async issueVoucher(ctx, wasteId, type, amount) {
         const mspID = ctx.clientIdentity.getMSPID();
-        if (mspID !== "wasteCollectionCompanyMSP") {
+        if (mspID !== "governmentMSP") {
             throw new Error("Unauthorized MSP");
         }
         const exists = await this.wasteExists(ctx, wasteId);
@@ -138,7 +138,7 @@ class Waste extends Contract {
 
     async buyWaste(ctx, wasteId, owner) {
         const mspID = ctx.clientIdentity.getMSPID();
-        if (mspID !== "wasteCollectionCompanyMSP") {
+        if (mspID !== "manufactureMSP") {
             throw new Error("Unauthorized MSP");
         }
         const exists = await this.wasteExists(ctx, wasteId);
