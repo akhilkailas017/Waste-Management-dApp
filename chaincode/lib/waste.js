@@ -1,11 +1,9 @@
-// testing waste 
-
 "use strict";
 
 const { Contract } = require("fabric-contract-api");
 
 async function getCollectionName(ctx){
-    const collectionName='WasteCollection';
+    const collectionName = 'WasteCollection';
     return collectionName;
 }
 
@@ -88,40 +86,39 @@ class Waste extends Contract {
     }
 
     async voucherExists(ctx, voucherId) {
-        const collectionName=await getCollectionName(ctx);
-        const data=await ctx.stub.getPrivateDataHash(collectionName,voucherId);
+        const collectionName = await getCollectionName(ctx);
+        const data = await ctx.stub.getPrivateDataHash(collectionName, voucherId);
         return !!data && data.length > 0;
     }
 
     async issueVoucher(ctx, voucherId) {
-
         const mspid = ctx.clientIdentity.getMSPID();
         if (mspid === 'governmentMSP') {
-
             const exists = await this.voucherExists(ctx, voucherId);
             if (exists) {
                 throw new Error(`The asset order ${voucherId} already exists`);
             }
 
-            const buffer = await ctx.stub.getState(wasteId);
-            const waste = JSON.parse(buffer.toString());
-
-            const VoucherAsset = {};
-
             const transientData = ctx.stub.getTransient();
-
-            if (transientData.size === 0 || !transientData.has('wasteId')
-                || !transientData.has('type') || !transientData.has('amount')
-            ) {
+            if (transientData.size === 0 || !transientData.has('wasteId') || !transientData.has('type') || !transientData.has('amount')) {
                 throw new Error('The expected key was not specified in transient data. Please try again.');
             }
 
-            VoucherAsset.wasteId = transientData.get('wasteId').toString();
-            VoucherAsset.type = transientData.get('type').toString();
-            VoucherAsset.amount = transientData.get('amount').toString();
-            VoucherAsset.status = 'issued';
-            VoucherAsset.collectionCompany = waste.collectionCompany;
-            VoucherAsset.assetType = 'voucher';
+            const wasteId = transientData.get('wasteId').toString();
+            const wasteBuffer = await ctx.stub.getState(wasteId);
+            if (!wasteBuffer || wasteBuffer.length === 0) {
+                throw new Error(`The waste with ID ${wasteId} does not exist`);
+            }
+            const waste = JSON.parse(wasteBuffer.toString());
+
+            const VoucherAsset = {
+                wasteId,
+                type: transientData.get('type').toString(),
+                amount: transientData.get('amount').toString(),
+                status: 'issued',
+                collectionCompany: waste.collectionCompany,
+                assetType: 'voucher'
+            };
 
             if (VoucherAsset.type !== "incentive" && VoucherAsset.type !== "penalty") {
                 throw new Error("Invalid type. Must be either 'incentive' or 'penalty'");
@@ -129,8 +126,9 @@ class Waste extends Contract {
 
             const collectionName = await getCollectionName(ctx);
             await ctx.stub.putPrivateData(collectionName, voucherId, Buffer.from(JSON.stringify(VoucherAsset)));
+            return `Voucher with ID ${voucherId} issued successfully.`;
         } else {
-            return (`Organisation with mspid ${mspid} cannot perform this action.`)
+            throw new Error(`Organisation with mspid ${mspid} cannot perform this action.`);
         }
     }
 
@@ -139,11 +137,9 @@ class Waste extends Contract {
         if (!exists) {
             throw new Error(`The voucher with ID ${voucherId} does not exist`);
         }
-        let privateDataString;
-        const collectionName=await getCollectionName(ctx);
-        const privateData = await ctx.stub.getPrivateData(collectionName,voucherId);
-        privateDataString=JSON.parse(privateData.toString());
-        return privateDataString;
+        const collectionName = await getCollectionName(ctx);
+        const privateData = await ctx.stub.getPrivateData(collectionName, voucherId);
+        return JSON.parse(privateData.toString());
     }
 
     async useVoucher(ctx, voucherId) {
@@ -151,11 +147,11 @@ class Waste extends Contract {
         if (!exists) {
             throw new Error(`The voucher with ID ${voucherId} does not exist`);
         }
-        const buffer = await ctx.stub.getState(voucherId);
-        const voucher = JSON.parse(buffer.toString());
+        const collectionName = await getCollectionName(ctx);
+        const privateData = await ctx.stub.getPrivateData(collectionName, voucherId);
+        const voucher = JSON.parse(privateData.toString());
         voucher.status = "used";
-        const updatedBuffer = Buffer.from(JSON.stringify(voucher));
-        await ctx.stub.putState(voucherId, updatedBuffer);
+        await ctx.stub.putPrivateData(collectionName, voucherId, Buffer.from(JSON.stringify(voucher)));
         return `Voucher with ID ${voucherId} used successfully.`;
     }
 
@@ -176,7 +172,6 @@ class Waste extends Contract {
         await ctx.stub.putState(wasteId, updatedBuffer);
         return `Waste with ID ${wasteId} bought successfully.`;
     }
-
 }
 
 module.exports = Waste;
