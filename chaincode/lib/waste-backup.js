@@ -1,16 +1,8 @@
-// testing waste 
-
 "use strict";
 
 const { Contract } = require("fabric-contract-api");
 
-async function getCollectionName(ctx){
-    const collectionName='WasteCollection';
-    return collectionName;
-}
-
 class Waste extends Contract {
-
     async wasteExists(ctx, wasteId) {
         const buffer = await ctx.stub.getState(wasteId);
         return !!buffer && buffer.length > 0;
@@ -88,50 +80,37 @@ class Waste extends Contract {
     }
 
     async voucherExists(ctx, voucherId) {
-        const collectionName=await getCollectionName(ctx);
-        const data=await ctx.stub.getPrivateDataHash(collectionName,voucherId);
-        return !!data && data.length > 0;
+        const buffer = await ctx.stub.getState(voucherId);
+        return !!buffer && buffer.length > 0;
     }
 
-    async issueVoucher(ctx, voucherId) {
-
-        const mspid = ctx.clientIdentity.getMSPID();
-        if (mspid === 'governmentMSP') {
-
-            const exists = await this.voucherExists(ctx, voucherId);
-            if (exists) {
-                throw new Error(`The asset order ${voucherId} already exists`);
-            }
-
-            const buffer = await ctx.stub.getState(wasteId);
-            const waste = JSON.parse(buffer.toString());
-
-            const VoucherAsset = {};
-
-            const transientData = ctx.stub.getTransient();
-
-            if (transientData.size === 0 || !transientData.has('wasteId')
-                || !transientData.has('type') || !transientData.has('amount')
-            ) {
-                throw new Error('The expected key was not specified in transient data. Please try again.');
-            }
-
-            VoucherAsset.wasteId = transientData.get('wasteId').toString();
-            VoucherAsset.type = transientData.get('type').toString();
-            VoucherAsset.amount = transientData.get('amount').toString();
-            VoucherAsset.status = 'issued';
-            VoucherAsset.collectionCompany = waste.collectionCompany;
-            VoucherAsset.assetType = 'voucher';
-
-            if (VoucherAsset.type !== "incentive" && VoucherAsset.type !== "penalty") {
-                throw new Error("Invalid type. Must be either 'incentive' or 'penalty'");
-            }
-
-            const collectionName = await getCollectionName(ctx);
-            await ctx.stub.putPrivateData(collectionName, voucherId, Buffer.from(JSON.stringify(VoucherAsset)));
-        } else {
-            return (`Organisation with mspid ${mspid} cannot perform this action.`)
+    async issueVoucher(ctx, wasteId, type, amount) {
+        const mspID = ctx.clientIdentity.getMSPID();
+        if (mspID !== "governmentMSP") {
+            throw new Error("Unauthorized MSP");
         }
+        const exists = await this.wasteExists(ctx, wasteId);
+        if (!exists) {
+            throw new Error(`The waste with ID ${wasteId} does not exist`);
+        }
+        if (type !== "incentive" && type !== "penalty") {
+            throw new Error("Invalid type. Must be either 'incentive' or 'penalty'");
+        }
+        const buffer = await ctx.stub.getState(wasteId);
+        const waste = JSON.parse(buffer.toString());
+        const voucherId = `${wasteId}_voucher_${new Date().getTime()}`;
+        const voucherIssue = {
+            voucherId,
+            wasteId,
+            collectionCompany: waste.collectionCompany,
+            type,
+            amount: parseFloat(amount),
+            status: "issued",
+            assetType: "voucher",
+        };
+        const voucherBuffer = Buffer.from(JSON.stringify(voucherIssue));
+        await ctx.stub.putState(voucherId, voucherBuffer);
+        return `Voucher with ID ${voucherId} of type '${type}' for amount ${amount} issued successfully for waste ID ${wasteId}.`;
     }
 
     async readVoucher(ctx, voucherId) {
@@ -139,11 +118,9 @@ class Waste extends Contract {
         if (!exists) {
             throw new Error(`The voucher with ID ${voucherId} does not exist`);
         }
-        let privateDataString;
-        const collectionName=await getCollectionName(ctx);
-        const privateData = await ctx.stub.getPrivateData(collectionName,voucherId);
-        privateDataString=JSON.parse(privateData.toString());
-        return privateDataString;
+        const buffer = await ctx.stub.getState(voucherId);
+        const voucher = JSON.parse(buffer.toString());
+        return voucher;
     }
 
     async useVoucher(ctx, voucherId) {
@@ -175,6 +152,75 @@ class Waste extends Contract {
         const updatedBuffer = Buffer.from(JSON.stringify(waste));
         await ctx.stub.putState(wasteId, updatedBuffer);
         return `Waste with ID ${wasteId} bought successfully.`;
+    }
+
+    // Rich query to retrieve wastes by status
+    async queryWastesByStatus(ctx, status) {
+        const queryString = {
+            selector: {
+                assetType: "waste",
+                status: status,
+            },
+        };
+        const iterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+        const results = [];
+        for await (const res of iterator) {
+            const waste = JSON.parse(res.value.toString("utf8"));
+            results.push(waste);
+        }
+        return results;
+    }
+
+    // Rich query to retrieve vouchers by type and status
+    async queryVouchersByTypeAndStatus(ctx, type, status) {
+        const queryString = {
+            selector: {
+                assetType: "voucher",
+                type: type,
+                status: status,
+            },
+        };
+        const iterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+        const results = [];
+        for await (const res of iterator) {
+            const voucher = JSON.parse(res.value.toString("utf8"));
+            results.push(voucher);
+        }
+        return results;
+    }
+
+    // Rich query to retrieve all wastes owned by a specific owner
+    async queryWastesByOwner(ctx, owner) {
+        const queryString = {
+            selector: {
+                assetType: "waste",
+                owner: owner,
+            },
+        };
+        const iterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+        const results = [];
+        for await (const res of iterator) {
+            const waste = JSON.parse(res.value.toString("utf8"));
+            results.push(waste);
+        }
+        return results;
+    }
+
+    // Rich query to retrieve vouchers by collectionCompany
+    async queryVouchersByCollectionCompany(ctx, collectionCompany) {
+        const queryString = {
+            selector: {
+                assetType: "voucher",
+                collectionCompany: collectionCompany,
+            },
+        };
+        const iterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+        const results = [];
+        for await (const res of iterator) {
+            const voucher = JSON.parse(res.value.toString("utf8"));
+            results.push(voucher);
+        }
+        return results;
     }
 
 }

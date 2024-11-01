@@ -1,7 +1,7 @@
 [
   {
       "name": "WasteCollection",
-      "policy": "OR('manufactureMSP.member', 'governmentMSP.member')",
+      "policy": "OR('wasteCollectionCompanyMSP.member', 'governmentMSP.member')",
       "requiredPeerCount": 1,
       "maxPeerCount": 1,
       "blockToLive": 100,
