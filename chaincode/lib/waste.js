@@ -105,61 +105,32 @@ class Waste extends Contract {
 
     async issueVoucher(ctx, voucherId) {
         const mspid = ctx.clientIdentity.getMSPID();
-        console.log(`MSP ID for issueVoucher: ${mspid}`);
-        if (mspid !== 'governmentMSP') {
-            throw new Error(`Organisation with MSP ID ${mspid} cannot perform this action.`);
+        if (mspid === "governmentMSP") {
+            const exists = await this.voucherExists(ctx, voucherId);
+            if (exists) {
+                throw new Error(`voucher ${voucherId} already exists`);
+            }
+            const voucherAsset = {};
+            const transientData = ctx.stub.getTransient();
+            if ( transientData.size === 0 || !transientData.has("wasteId") || !transientData.has("type") || !transientData.has("amount")) {
+                throw new Error("The expected key was not specified in transient data. Please try again.");
+            }
+            voucherAsset.wasteId = transientData.get("wasteId").toString();
+            voucherAsset.type = transientData.get("type").toString();
+            voucherAsset.amount = transientData.get("amount").toString();
+            voucherAsset.assetType = "voucher";
+            voucherAsset.status = "issued";
+
+            const collectionName = await getCollectionName(ctx);
+            await ctx.stub.putPrivateData(
+                collectionName,
+                voucherId,
+                Buffer.from(JSON.stringify(voucherAsset))
+            );
+        } else {
+            return `Organisation with mspid ${mspid} cannot perform this action.`;
         }
-    
-        // Check if the voucher already exists in private data
-        const collectionName = 'WasteCollection';
-        const exists = await this.voucherExists(ctx, voucherId);
-        if (exists) {
-            throw new Error(`The asset order ${voucherId} already exists`);
-        }
-    
-        // Retrieve and validate transient data
-        const transientData = ctx.stub.getTransient();
-        console.log("Received transient data:", JSON.stringify(Object.fromEntries(transientData.entries())));
-    
-        if (!transientData.has('wasteId') || !transientData.has('type') || !transientData.has('amount')) {
-            throw new Error('The expected key was not specified in transient data. Please provide wasteId, type, and amount.');
-        }
-    
-        const wasteId = transientData.get('wasteId').toString();
-        const type = transientData.get('type').toString();
-        const amount = transientData.get('amount').toString();
-    
-        // Check for valid type and non-empty values
-        if (!wasteId || !type || !amount) {
-            throw new Error('Transient data fields wasteId, type, and amount cannot be empty.');
-        }
-    
-        if (type !== "incentive" && type !== "penalty") {
-            throw new Error("Invalid type. Must be either 'incentive' or 'penalty'");
-        }
-    
-        // Retrieve waste asset to ensure wasteId exists
-        const wasteBuffer = await ctx.stub.getState(wasteId);
-        if (!wasteBuffer || wasteBuffer.length === 0) {
-            throw new Error(`The waste with ID ${wasteId} does not exist`);
-        }
-        const waste = JSON.parse(wasteBuffer.toString());
-    
-        // Create VoucherAsset and store it in the private data collection
-        const VoucherAsset = {
-            wasteId,
-            type,
-            amount,
-            status: 'issued',
-            collectionCompany: waste.collectionCompany,
-            assetType: 'voucher'
-        };
-    
-        await ctx.stub.putPrivateData(collectionName, voucherId, Buffer.from(JSON.stringify(VoucherAsset)));
-        console.log(`Voucher with ID ${voucherId} issued successfully.`);
-        return `Voucher with ID ${voucherId} issued successfully.`;
     }
-    
 
     async readVoucher(ctx, voucherId) {
         const exists = await this.voucherExists(ctx, voucherId);

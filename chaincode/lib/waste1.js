@@ -2,7 +2,6 @@
 
 const { Contract } = require("fabric-contract-api");
 
-// Utility function to get the collection name
 async function getCollectionName(ctx) {
     const collectionName = 'WasteCollection';
     console.log(`Collection name retrieved: ${collectionName}`);
@@ -11,7 +10,6 @@ async function getCollectionName(ctx) {
 
 class Waste extends Contract {
 
-    // Check if a waste asset exists
     async wasteExists(ctx, wasteId) {
         const buffer = await ctx.stub.getState(wasteId);
         const exists = !!buffer && buffer.length > 0;
@@ -19,7 +17,6 @@ class Waste extends Contract {
         return exists;
     }
 
-    // Create a new waste asset, accessible only to waste collection companies
     async createWaste(ctx, wasteId, collectionCompany, totalWeight, owner) {
         const mspID = ctx.clientIdentity.getMSPID();
         console.log(`MSP ID for createWaste: ${mspID}`);
@@ -41,11 +38,10 @@ class Waste extends Contract {
             console.log(`Waste with ID ${wasteId} created successfully.`);
             return `Waste with ID ${wasteId} created successfully.`;
         } else {
-            throw new Error("Unauthorized MSP: Only waste collection companies can create waste assets.");
+            throw new Error("Unauthorized MSP");
         }
     }
 
-    // Read a waste asset's details
     async readWaste(ctx, wasteId) {
         const exists = await this.wasteExists(ctx, wasteId);
         if (!exists) {
@@ -57,7 +53,6 @@ class Waste extends Contract {
         return waste;
     }
 
-    // Delete a waste asset, accessible only to waste collection companies
     async deleteWaste(ctx, wasteId) {
         const mspID = ctx.clientIdentity.getMSPID();
         console.log(`MSP ID for deleteWaste: ${mspID}`);
@@ -70,16 +65,15 @@ class Waste extends Contract {
             console.log(`Waste with ID ${wasteId} deleted successfully.`);
             return `Waste with ID ${wasteId} deleted successfully.`;
         } else {
-            throw new Error("Unauthorized MSP: Only waste collection companies can delete waste assets.");
+            throw new Error("Unauthorized MSP");
         }
     }
 
-    // Upsert details of waste at the recycling center, accessible only to recycling centers
     async upsertWasteDetails(ctx, wasteId, reusableWeight, owner) {
         const mspID = ctx.clientIdentity.getMSPID();
         console.log(`MSP ID for upsertWasteDetails: ${mspID}`);
         if (mspID !== "recyclingcenterMSP") {
-            throw new Error("Unauthorized MSP: Only recycling centers can update waste details.");
+            throw new Error("Unauthorized MSP");
         }
         const exists = await this.wasteExists(ctx, wasteId);
         if (!exists) {
@@ -93,7 +87,7 @@ class Waste extends Contract {
         } else {
             throw new Error("Total weight must be greater than zero to calculate usable percentage");
         }
-        waste.status = "At Recycling Center";
+        waste.status = "at Recycling Center";
         waste.owner = owner;
         const updatedBuffer = Buffer.from(JSON.stringify(waste));
         await ctx.stub.putState(wasteId, updatedBuffer);
@@ -101,7 +95,6 @@ class Waste extends Contract {
         return `Waste with ID ${wasteId} updated successfully with reusable weight and usable percentage.`;
     }
 
-    // Check if a voucher exists in private data
     async voucherExists(ctx, voucherId) {
         const collectionName = await getCollectionName(ctx);
         const data = await ctx.stub.getPrivateDataHash(collectionName, voucherId);
@@ -110,56 +103,65 @@ class Waste extends Contract {
         return exists;
     }
 
-    // Issue a new voucher, accessible only to the government
     async issueVoucher(ctx, voucherId) {
         const mspid = ctx.clientIdentity.getMSPID();
         console.log(`MSP ID for issueVoucher: ${mspid}`);
-        if (mspid === 'governmentMSP') {
-            const exists = await this.voucherExists(ctx, voucherId);
-            if (exists) {
-                throw new Error(`The voucher with ID ${voucherId} already exists`);
-            }
-
-            const transientData = ctx.stub.getTransient();
-            if (transientData.size === 0 || !transientData.has('wasteId') || !transientData.has('type') || !transientData.has('amount')) {
-                throw new Error('Expected transient data keys were not provided. Please include wasteId, type, and amount.');
-            }
-
-            const wasteId = transientData.get('wasteId').toString();
-            const wasteBuffer = await ctx.stub.getState(wasteId);
-            if (!wasteBuffer || wasteBuffer.length === 0) {
-                throw new Error(`The waste with ID ${wasteId} does not exist`);
-            }
-            const waste = JSON.parse(wasteBuffer.toString());
-
-            const VoucherAsset = {
-                wasteId,
-                type: transientData.get('type').toString(),
-                amount: transientData.get('amount').toString(),
-                status: 'issued',
-                collectionCompany: waste.collectionCompany,
-                assetType: 'voucher'
-            };
-
-            if (VoucherAsset.type !== "incentive" && VoucherAsset.type !== "penalty") {
-                throw new Error("Invalid type. Must be either 'incentive' or 'penalty'");
-            }
-
-            const collectionName = await getCollectionName(ctx);
-            await ctx.stub.putPrivateData(collectionName, voucherId, Buffer.from(JSON.stringify(VoucherAsset)));
-            console.log(`Voucher with ID ${voucherId} issued successfully.`);
-            return `Voucher with ID ${voucherId} issued successfully.`;
-        } else {
-            throw new Error(`Organization with MSP ID ${mspid} is not authorized to issue vouchers.`);
+        if (mspid !== 'governmentMSP') {
+            throw new Error(`Organisation with MSP ID ${mspid} cannot perform this action.`);
         }
+    
+        // Check if the voucher already exists in private data
+        const collectionName = 'WasteCollection';
+        const exists = await this.voucherExists(ctx, voucherId);
+        if (exists) {
+            throw new Error(`The asset order ${voucherId} already exists`);
+        }
+    
+        // Retrieve and validate transient data
+        const transientData = ctx.stub.getTransient();
+        console.log("Received transient data:", JSON.stringify(Object.fromEntries(transientData.entries())));
+    
+        if (!transientData.has('wasteId') || !transientData.has('type') || !transientData.has('amount')) {
+            throw new Error('The expected key was not specified in transient data. Please provide wasteId, type, and amount.');
+        }
+    
+        const wasteId = transientData.get('wasteId').toString();
+        const type = transientData.get('type').toString();
+        const amount = transientData.get('amount').toString();
+    
+        // Check for valid type and non-empty values
+        if (!wasteId || !type || !amount) {
+            throw new Error('Transient data fields wasteId, type, and amount cannot be empty.');
+        }
+    
+        if (type !== "incentive" && type !== "penalty") {
+            throw new Error("Invalid type. Must be either 'incentive' or 'penalty'");
+        }
+    
+        // Retrieve waste asset to ensure wasteId exists
+        const wasteBuffer = await ctx.stub.getState(wasteId);
+        if (!wasteBuffer || wasteBuffer.length === 0) {
+            throw new Error(`The waste with ID ${wasteId} does not exist`);
+        }
+        const waste = JSON.parse(wasteBuffer.toString());
+    
+        // Create VoucherAsset and store it in the private data collection
+        const VoucherAsset = {
+            wasteId,
+            type,
+            amount,
+            status: 'issued',
+            collectionCompany: waste.collectionCompany,
+            assetType: 'voucher'
+        };
+    
+        await ctx.stub.putPrivateData(collectionName, voucherId, Buffer.from(JSON.stringify(VoucherAsset)));
+        console.log(`Voucher with ID ${voucherId} issued successfully.`);
+        return `Voucher with ID ${voucherId} issued successfully.`;
     }
+    
 
-    // Read voucher details, accessible only to the waste collection company
     async readVoucher(ctx, voucherId) {
-        const mspID = ctx.clientIdentity.getMSPID();
-        if (mspID !== "wasteCollectionCompanyMSP") {
-            throw new Error("Unauthorized MSP: Only waste collection companies can read vouchers.");
-        }
         const exists = await this.voucherExists(ctx, voucherId);
         if (!exists) {
             throw new Error(`The voucher with ID ${voucherId} does not exist`);
@@ -171,13 +173,7 @@ class Waste extends Contract {
         return voucher;
     }
 
-    // Mark a voucher as used, accessible only to the government
     async useVoucher(ctx, voucherId) {
-        const mspid = ctx.clientIdentity.getMSPID();
-        console.log(`MSP ID for useVoucher: ${mspid}`);
-        if (mspid !== 'governmentMSP') {
-            throw new Error("Unauthorized MSP: Only the government can mark vouchers as used.");
-        }
         const exists = await this.voucherExists(ctx, voucherId);
         if (!exists) {
             throw new Error(`The voucher with ID ${voucherId} does not exist`);
@@ -187,16 +183,15 @@ class Waste extends Contract {
         const voucher = JSON.parse(privateData.toString());
         voucher.status = "used";
         await ctx.stub.putPrivateData(collectionName, voucherId, Buffer.from(JSON.stringify(voucher)));
-        console.log(`Voucher with ID ${voucherId} marked as used.`);
-        return `Voucher with ID ${voucherId} marked as used.`;
+        console.log(`Voucher with ID ${voucherId} used successfully.`);
+        return `Voucher with ID ${voucherId} used successfully.`;
     }
 
-    // Buy waste, accessible only to manufacturers
     async buyWaste(ctx, wasteId, owner) {
         const mspID = ctx.clientIdentity.getMSPID();
         console.log(`MSP ID for buyWaste: ${mspID}`);
         if (mspID !== "manufactureMSP") {
-            throw new Error("Unauthorized MSP: Only manufacturers can buy waste.");
+            throw new Error("Unauthorized MSP");
         }
         const exists = await this.wasteExists(ctx, wasteId);
         if (!exists) {
@@ -204,7 +199,7 @@ class Waste extends Contract {
         }
         const buffer = await ctx.stub.getState(wasteId);
         const waste = JSON.parse(buffer.toString());
-        waste.status = "At Manufacture";
+        waste.status = "at Manufacture";
         waste.owner = owner;
         const updatedBuffer = Buffer.from(JSON.stringify(waste));
         await ctx.stub.putState(wasteId, updatedBuffer);

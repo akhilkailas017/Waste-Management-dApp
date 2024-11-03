@@ -27,5 +27,5 @@ echo ${CHANNEL_NAME}
 
 configtxgen -profile ChannelUsingRaft -outputBlock ${PWD}/channel-artifacts/${CHANNEL_NAME}.block -channelID $CHANNEL_NAME
 
-chmod +x start2.sh
-./start2.sh
+# chmod +x start2.sh
+# ./start2.sh
