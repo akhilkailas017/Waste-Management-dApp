@@ -4,7 +4,7 @@
 
 "use strict";
 
-const Waste = require("./lib/waste-contract");
+const Waste = require("./lib/waste");
 
 module.exports.Waste = Waste;
 
