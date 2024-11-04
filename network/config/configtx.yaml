@@ -2,7 +2,7 @@ Organizations:
   - &OrdererOrg
     Name: OrdererOrg
     ID: OrdererMSP
-    MSPDir: ../organizations/ordererOrganizations/wasteManagement.com/msp
+    MSPDir: ../organizations/ordererOrganizations/management.com/msp
     Policies:
       Readers:
         Type: Signature
@@ -14,48 +14,45 @@ Organizations:
         Type: Signature
         Rule: "OR('OrdererMSP.admin')"
     OrdererEndpoints:
-      - orderer.wasteManagement.com:7050
-
-  - &wasteCollectionCompany
-    Name: wasteCollectionCompanyMSP
-    ID: wasteCollectionCompanyMSP
-    MSPDir: ../organizations/peerOrganizations/wasteCollectionCompany.wasteManagement.com/msp
+      - orderer.management.com:7050
+  - &manufacturer
+    Name: manufacturerMSP
+    ID: manufacturerMSP
+    MSPDir: ../organizations/peerOrganizations/manufacturer.management.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('wasteCollectionCompanyMSP.admin', 'wasteCollectionCompanyMSP.peer', 'wasteCollectionCompanyMSP.client')"
+        Rule: "OR('manufacturerMSP.admin', 'manufacturerMSP.peer', 'manufacturerMSP.client')"
       Writers:
         Type: Signature
-        Rule: "OR('wasteCollectionCompanyMSP.admin', 'wasteCollectionCompanyMSP.client')"
+        Rule: "OR('manufacturerMSP.admin', 'manufacturerMSP.client')"
       Admins:
         Type: Signature
-        Rule: "OR('wasteCollectionCompanyMSP.admin')"
+        Rule: "OR('manufacturerMSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('wasteCollectionCompanyMSP.peer')"
-  
-  - &recyclingcenter
-    Name: recyclingcenterMSP
-    ID: recyclingcenterMSP
-    MSPDir: ../organizations/peerOrganizations/recyclingcenter.wasteManagement.com/msp
+        Rule: "OR('manufacturerMSP.peer')"
+  - &WasteCollectionCompany
+    Name: WasteCollectionCompanyMSP
+    ID: WasteCollectionCompanyMSP
+    MSPDir: ../organizations/peerOrganizations/WasteCollectionCompany.management.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('recyclingcenterMSP.admin', 'recyclingcenterMSP.peer', 'recyclingcenterMSP.client')"
+        Rule: "OR('WasteCollectionCompanyMSP.admin', 'WasteCollectionCompanyMSP.peer', 'WasteCollectionCompanyMSP.client')"
       Writers:
         Type: Signature
-        Rule: "OR('recyclingcenterMSP.admin', 'recyclingcenterMSP.client')"
+        Rule: "OR('WasteCollectionCompanyMSP.admin', 'WasteCollectionCompanyMSP.client')"
       Admins:
         Type: Signature
-        Rule: "OR('recyclingcenterMSP.admin')"
+        Rule: "OR('WasteCollectionCompanyMSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('recyclingcenterMSP.peer')"
-
+        Rule: "OR('WasteCollectionCompanyMSP.peer')"
   - &government
     Name: governmentMSP
     ID: governmentMSP
-    MSPDir: ../organizations/peerOrganizations/government.wasteManagement.com/msp
+    MSPDir: ../organizations/peerOrganizations/government.management.com/msp
     Policies:
       Readers:
         Type: Signature
@@ -69,24 +66,24 @@ Organizations:
       Endorsement:
         Type: Signature
         Rule: "OR('governmentMSP.peer')"
-
-  - &manufacture
-    Name: manufactureMSP
-    ID: manufactureMSP
-    MSPDir: ../organizations/peerOrganizations/manufacture.wasteManagement.com/msp
+  - &recyclingCenter
+    Name: recyclingCenterMSP
+    ID: recyclingCenterMSP
+    MSPDir: ../organizations/peerOrganizations/recyclingCenter.management.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('manufactureMSP.admin', 'manufactureMSP.peer', 'manufactureMSP.client')"
+        Rule: "OR('recyclingCenterMSP.admin', 'recyclingCenterMSP.peer', 'recyclingCenterMSP.client')"
       Writers:
         Type: Signature
-        Rule: "OR('manufactureMSP.admin', 'manufactureMSP.client')"
+        Rule: "OR('recyclingCenterMSP.admin', 'recyclingCenterMSP.client')"
       Admins:
         Type: Signature
-        Rule: "OR('manufactureMSP.admin')"
+        Rule: "OR('recyclingCenterMSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('manufactureMSP.peer')"
+        Rule: "OR('recyclingCenterMSP.peer')"
+
 
 Capabilities:  
   Channel: &ChannelCapabilities
@@ -97,7 +94,7 @@ Capabilities:
     V2_5: true
     
 Application: &ApplicationDefaults
-  Organizations: []
+  Organizations:
   Policies:
     Readers:
       Type: ImplicitMeta
@@ -119,13 +116,13 @@ Application: &ApplicationDefaults
 
 Orderer: &OrdererDefaults
   Addresses:
-    - orderer.wasteManagement.com:7050
+    - orderer.management.com:7050
   BatchTimeout: 2s
   BatchSize:
     MaxMessageCount: 10
     AbsoluteMaxBytes: 99 MB
     PreferredMaxBytes: 512 KB
-  Organizations: []
+  Organizations:
   Policies:
     Readers:
       Type: ImplicitMeta
@@ -162,18 +159,18 @@ Profiles:
       OrdererType: etcdraft
       EtcdRaft:
         Consenters:
-          - Host: orderer.wasteManagement.com
+          - Host: orderer.management.com
             Port: 7050
-            ClientTLSCert: ../organizations/ordererOrganizations/wasteManagement.com/orderers/orderer.wasteManagement.com/tls/server.crt
-            ServerTLSCert: ../organizations/ordererOrganizations/wasteManagement.com/orderers/orderer.wasteManagement.com/tls/server.crt
+            ClientTLSCert: ../organizations/ordererOrganizations/management.com/orderers/orderer.management.com/tls/server.crt
+            ServerTLSCert: ../organizations/ordererOrganizations/management.com/orderers/orderer.management.com/tls/server.crt
       Organizations:
         - *OrdererOrg
       Capabilities: *OrdererCapabilities
     Application:
       <<: *ApplicationDefaults
       Organizations:
-        - *wasteCollectionCompany
-        - *recyclingcenter
+        - *manufacturer
         - *government
-        - *manufacture
+        - *WasteCollectionCompany
+        - *recyclingCenter
       Capabilities: *ApplicationCapabilities
