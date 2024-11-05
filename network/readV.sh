@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 export CHANNEL_NAME=managementchannel
 export FABRIC_CFG_PATH=./peercfg
 export CORE_PEER_LOCALMSPID=governmentMSP
@@ -14,9 +13,5 @@ export WasteCollectionCompany_PEER_TLSROOTCERT=${PWD}/organizations/peerOrganiza
 export government_PEER_TLSROOTCERT=${PWD}/organizations/peerOrganizations/government.management.com/peers/peer0.government.management.com/tls/ca.crt
 export recyclingCenter_PEER_TLSROOTCERT=${PWD}/organizations/peerOrganizations/recyclingCenter.management.com/peers/peer0.recyclingCenter.management.com/tls/ca.crt
 sleep 3
-peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.management.com --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n basic \
-    --peerAddresses localhost:7051 --tlsRootCertFiles $manufacturer_PEER_TLSROOTCERT \
-    --peerAddresses localhost:9051 --tlsRootCertFiles $WasteCollectionCompany_PEER_TLSROOTCERT \
-    --peerAddresses localhost:8051 --tlsRootCertFiles $government_PEER_TLSROOTCERT \
-    --peerAddresses localhost:11051 --tlsRootCertFiles $recyclingCenter_PEER_TLSROOTCERT \
-    -c '{"function":"useVoucher","Args":["waste-01","v-01"]}'
+peer chaincode query -C $CHANNEL_NAME -n basic -c '{"Args":["govContract:readVoucher","v-01"]}'
+sleep 3

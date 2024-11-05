@@ -1,6 +1,7 @@
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
+const govContract = require('./govContract')
 
 class collectionContract extends Contract {
 
@@ -22,6 +23,7 @@ class collectionContract extends Contract {
                 owner,
                 status: "In Waste Collection Company",
                 assetType: "waste",
+                voucherStatus: "not issued"
             };
             const buffer = Buffer.from(JSON.stringify(product));
             await ctx.stub.putState(wasteId, buffer);
@@ -103,7 +105,7 @@ class collectionContract extends Contract {
         return (!!buffer && buffer.length > 0);
     }
 
-    async createProduct(ctx,productId, wasteId, name) {
+    async createProduct(ctx, productId, wasteId, name) {
         const mspID = ctx.clientIdentity.getMSPID();
         if (mspID === 'manufacturerMSP') {
             const exists = await this.productExist(ctx, productId);
@@ -113,7 +115,7 @@ class collectionContract extends Contract {
             const product = {
                 wasteId,
                 name,
-                owner:"manufature",
+                owner: "manufature",
                 status: "at Manufacture",
                 assetType: "product",
             };
@@ -152,8 +154,8 @@ class collectionContract extends Contract {
         while (!res.done) {
             if (res.value && res.value.value.toString()) {
                 let jsonRes = {};
-                    jsonRes.Key = res.value.key;
-                    jsonRes.Record = JSON.parse(res.value.value.toString());
+                jsonRes.Key = res.value.key;
+                jsonRes.Record = JSON.parse(res.value.value.toString());
                 allResult.push(jsonRes)
             }
             res = await iterator.next()
@@ -183,6 +185,67 @@ class collectionContract extends Contract {
         let result = await this._getAllResults(resultIterator);
         return JSON.stringify(result)
     }
+
+
+    // async useVoucher(ctx, wasteId, voucherId) {
+    //     const govContract = new govContract();
+    //     const wasteExist = await this.wasteExist(ctx, wasteId);
+    //     if (!wasteExist) {
+    //         throw new Error(`${wasteId} does not exist`);
+    //     }
+    //     const voucherExist = await govContract.voucherExist(ctx, voucherId);
+    //     if (!voucherExist) {
+    //         throw new Error(`The ${voucherId} does not exist`);
+    //     }
+    //     const wasteDetails = await this.readWaste(ctx, wasteId);
+    //     const voucherDetails = await govContract.readVoucher(ctx, voucherId);
+    //     if (voucherDetails.wasteId === wasteId) {
+    //         wasteDetails.voucherStatus = 'used';
+    //         const updatedData = Buffer.from(JSON.stringify(wasteDetails));
+    //         await ctx.stub.putState(wasteId, updatedData);
+    //         await govContract.deleteOrder(ctx, voucherId);
+    //         return `Voucher with ${wasteId} used`;
+    //     } else {
+    //         return 'details not matching';
+    //     }
+    // }
+
+    async useVoucher(ctx, wasteId, voucherId) {
+        // Instantiate govContract to use its functions
+        const govContractInstance = new govContract();
+    
+        // Check if the waste exists
+        const wasteExist = await this.wasteExist(ctx, wasteId);
+        if (!wasteExist) {
+            throw new Error(`Waste with ID ${wasteId} does not exist`);
+        }
+    
+        // Check if the voucher exists
+        const voucherExist = await govContractInstance.voucherExist(ctx, voucherId);
+        if (!voucherExist) {
+            throw new Error(`Voucher with ID ${voucherId} does not exist`);
+        }
+    
+        // Retrieve details of the waste and voucher
+        const wasteDetails = await this.readWaste(ctx, wasteId);
+        const voucherDetails = await govContractInstance.readVoucher(ctx, voucherId);
+    
+        // Check if the voucher waste ID matches the given waste ID
+        if (voucherDetails.wasteId !== wasteId) {
+            throw new Error('Voucher waste ID does not match the given waste ID');
+        }
+    
+        // Update the waste to indicate the voucher has been used
+        wasteDetails.voucherStatus = 'used';
+        const updatedData = Buffer.from(JSON.stringify(wasteDetails));
+        await ctx.stub.putState(wasteId, updatedData);
+    
+        // Delete the voucher after updating the waste
+        await govContractInstance.deleteVoucher(ctx, voucherId);
+    
+        return `Voucher with ID ${voucherId} used for waste with ID ${wasteId}`;
+    }
+    
 
 }
 
