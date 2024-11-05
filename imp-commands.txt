@@ -1,0 +1,8 @@
+
+-------------------To Acess couchdb--------------------------------------
+http://localhost:5984/_utils/
+
+
+---------------To view console.log in terminal------------------
+Find the container running your chaincode (usually named something like dev-peer0.org1.example.com-yourchaincode-1.0).
+docker logs -f <container_name>

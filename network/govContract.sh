@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo ""
-echo "createWaste function"
+echo "createVoucher function"
 echo ""
 
 export wasteId=$(echo -n "waste-01" | base64 | tr -d \\n)

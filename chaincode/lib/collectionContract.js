@@ -211,40 +211,40 @@ class collectionContract extends Contract {
     // }
 
     async useVoucher(ctx, wasteId, voucherId) {
-        // Instantiate govContract to use its functions
-        const govContractInstance = new govContract();
-    
-        // Check if the waste exists
-        const wasteExist = await this.wasteExist(ctx, wasteId);
-        if (!wasteExist) {
-            throw new Error(`Waste with ID ${wasteId} does not exist`);
+        try {
+            const govContractInstance = new govContract();
+            console.log(`Attempting to use voucher ${voucherId} for waste ${wasteId}`);
+            const wasteExist = await this.wasteExist(ctx, wasteId);
+            console.log(`Waste exists: ${wasteExist}`);
+            if (!wasteExist) {
+                throw new Error(`Waste with ID ${wasteId} does not exist`);
+            }
+            const voucherExist = await govContractInstance.voucherExist(ctx, voucherId);
+            console.log(`Voucher exists: ${voucherExist}`);
+            if (!voucherExist) {
+                throw new Error(`Voucher with ID ${voucherId} does not exist`);
+            }
+            const wasteDetails = await this.readWaste(ctx, wasteId);
+            const voucherDetails = await govContractInstance.readVoucher(ctx, voucherId);
+            console.log("Waste Details:", wasteDetails);
+            console.log("Voucher Details:", voucherDetails);
+            if (voucherDetails.wasteId !== wasteId) {
+                throw new Error(`Voucher waste ID (${voucherDetails.wasteId}) does not match the provided waste ID (${wasteId})`);
+            }
+            wasteDetails.voucherStatus = 'used';
+            const updatedData = Buffer.from(JSON.stringify(wasteDetails));
+            await ctx.stub.putState(wasteId, updatedData);
+            console.log(`Updated waste ${wasteId} with used voucher status`);
+            await govContractInstance.deleteVoucher(ctx, voucherId);
+            console.log(`Deleted voucher ${voucherId} after use`);
+            return `Voucher with ID ${voucherId} used successfully for waste with ID ${wasteId}`;
+        } catch (error) {
+            console.error(`Error in useVoucher function: ${error.message}`);
+            throw new Error(`Failed to use voucher: ${error.message}`);
         }
-    
-        // Check if the voucher exists
-        const voucherExist = await govContractInstance.voucherExist(ctx, voucherId);
-        if (!voucherExist) {
-            throw new Error(`Voucher with ID ${voucherId} does not exist`);
-        }
-    
-        // Retrieve details of the waste and voucher
-        const wasteDetails = await this.readWaste(ctx, wasteId);
-        const voucherDetails = await govContractInstance.readVoucher(ctx, voucherId);
-    
-        // Check if the voucher waste ID matches the given waste ID
-        if (voucherDetails.wasteId !== wasteId) {
-            throw new Error('Voucher waste ID does not match the given waste ID');
-        }
-    
-        // Update the waste to indicate the voucher has been used
-        wasteDetails.voucherStatus = 'used';
-        const updatedData = Buffer.from(JSON.stringify(wasteDetails));
-        await ctx.stub.putState(wasteId, updatedData);
-    
-        // Delete the voucher after updating the waste
-        await govContractInstance.deleteVoucher(ctx, voucherId);
-    
-        return `Voucher with ID ${voucherId} used for waste with ID ${wasteId}`;
     }
+    
+    
     
 
 }
