@@ -232,6 +232,7 @@ class collectionContract extends Contract {
                 throw new Error(`Voucher waste ID (${voucherDetails.wasteId}) does not match the provided waste ID (${wasteId})`);
             }
             wasteDetails.voucherStatus = 'used';
+            console.log("wasteDetails before update",wasteDetails);
             const updatedData = Buffer.from(JSON.stringify(wasteDetails));
             console.log("updatedData:", updatedData);
             await ctx.stub.putState(wasteId, updatedData);

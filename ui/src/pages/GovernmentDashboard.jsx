@@ -27,7 +27,7 @@ const GovernmentDashboard = () => {
           </div>
 
           <div
-            onClick={() => navigate("/viewWasteDetails")}
+            onClick={() => navigate("/queryWaste")}
             className="bg-teal-200 hover:bg-teal-300 text-teal-900 font-semibold text-center py-8 cursor-pointer shadow-lg transition-all duration-200 transform hover:scale-105 rounded-xl"
           >
             View Waste Details
