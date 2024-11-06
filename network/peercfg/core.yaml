@@ -269,7 +269,7 @@ ledger:
       internalQueryLimit: 1000
       maxBatchUpdateSize: 1000
       createGlobalChangesDB: false
-      cacheSize: 0
+      cacheSize: 64
   history:
     enableHistoryDatabase: true
   pvtdataStore:
