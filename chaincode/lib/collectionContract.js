@@ -233,6 +233,7 @@ class collectionContract extends Contract {
             }
             wasteDetails.voucherStatus = 'used';
             const updatedData = Buffer.from(JSON.stringify(wasteDetails));
+            console.log("updatedData:", updatedData);
             await ctx.stub.putState(wasteId, updatedData);
             console.log(`Updated waste ${wasteId} with used voucher status`);
             await govContractInstance.deleteVoucher(ctx, voucherId);
