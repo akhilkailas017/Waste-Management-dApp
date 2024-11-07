@@ -319,4 +319,85 @@ router.post("/queryAllProduct", async (req, res) => {
 });
 
 
+router.post("/createVoucher", async (req, res) => {
+  try {
+    const { voucherId, wasteId, type, amount } = req.body;
+
+    let governmentClient = new clientApplication();
+
+    // Prepare transient data
+    const transientData = new Map();
+    transientData.set("wasteId", Buffer.from(wasteId));  // Ensure wasteId is valid
+    transientData.set("type", Buffer.from(type));        // Ensure type is valid
+    transientData.set("amount", Buffer.from(amount));    // Ensure amount is valid
+
+    // Debug: log transient data to ensure it's set correctly
+    console.log("Transient Data:", transientData);
+
+    const result = await governmentClient.submitTxn(
+      "government", // Organization (government)
+      "managementchannel", // Channel name
+      "basic", // Chaincode name (ensure your contract supports this)
+      "govContract", // Contract name
+      "privateTxn", // Transaction type (private)
+      transientData, // Transient data
+      "createVoucher", // Function name
+      voucherId // Pass voucherId
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Voucher created successfully!",
+      data: { result },
+    });
+  } catch (error) {
+    // Debug: log error to understand the issue
+    console.error("Error creating voucher:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error creating voucher!",
+      data: { error },
+    });
+  }
+});
+
+router.post("/readVoucher", async (req, res) => {
+  try {
+    const { voucherId } = req.body;
+
+    let governmentClient = new clientApplication();
+
+    const result = await governmentClient.submitTxn(
+      "government", // Organization (government)
+      "managementchannel", // Channel name
+      "basic", // Chaincode name
+      "govContract", // Contract name
+      "queryTxn", // Transaction type
+      "", // No transient data for querying
+      "readVoucher", // Function name
+      voucherId // Pass voucherId for querying
+    );
+
+    // Decode the result (ensure it returns a Buffer to decode)
+    const decodedString = new TextDecoder().decode(result);
+    const jsonObject = JSON.parse(decodedString);
+
+    res.status(200).json({
+      success: true,
+      message: "Voucher details retrieved successfully!",
+      data: { value: jsonObject },
+    });
+  } catch (error) {
+    // Debug: log error to understand the issue
+    console.error("Error retrieving voucher:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error retrieving voucher details!",
+      data: { error },
+    });
+  }
+});
+
+
+
 module.exports = router;
