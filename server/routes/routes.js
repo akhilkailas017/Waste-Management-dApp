@@ -40,10 +40,10 @@ router.post("/createWaste", async (req, res) => {
     let WasteCollectionCompanyClient = new clientApplication();
 
     const result = await WasteCollectionCompanyClient.submitTxn(
-      "manufacturer",
-      "autochannel",
-      "KBA-Automobile",
-      "CarContract",
+      "WasteCollectionCompany",
+      "managementchannel",
+      "basic",
+      "collectionContract",
       "invokeTxn",
       "",
       "createWaste",
