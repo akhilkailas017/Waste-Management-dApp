@@ -63,6 +63,23 @@ class govContract extends Contract {
         }
     }
 
+
+    async listVouchers(ctx) {
+        const query = {
+            selector: {
+                assetType: 'voucher'
+            }
+        };
+        const collectionName = await getCollectionName(ctx);
+        const result = await ctx.stub.getPrivateDataQueryResult(collectionName, JSON.stringify(query));
+        const vouchers = [];
+        for await (const record of result) {
+            const recordData = JSON.parse(record.value.toString('utf8'));
+            vouchers.push(recordData);
+        }
+        return vouchers;
+    }
+
     // async useVoucher(ctx, voucherId) {
     //     const mspid = ctx.clientIdentity.getMSPID();
     //     if (mspid !== 'governmentMSP') {

@@ -9,7 +9,7 @@ const BuyWaste = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch("/api/buywaste", {
+      const res = await fetch("/api/buyWaste", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,9 @@
 
 import { createBrowserRouter, createRoutesFromElements, RouterProvider, Route } from 'react-router-dom'
+
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import Homepage from './pages/Homepage'
 import CreateWaste from './pages/CreateWaste'
 import ReadWaste from './pages/ReadWaste'
@@ -50,6 +54,7 @@ function App() {
   return (
     <>
       <RouterProvider router={router} />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </>
   )
 }

@@ -8,7 +8,7 @@ const DeleteProduct = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch("/api/deleteproduct", {
+      const res = await fetch("/api/deleteProduct", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

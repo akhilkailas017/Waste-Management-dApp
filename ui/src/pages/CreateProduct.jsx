@@ -20,7 +20,7 @@ const CreateProduct = () => {
 
   const addProduct = async (newProduct) => {
     try {
-      const res = await fetch("/api/createproduct", {
+      const res = await fetch("/api/createProduct", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

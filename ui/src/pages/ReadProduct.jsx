@@ -10,7 +10,7 @@ const ReadProduct = () => {
     const readDetails = { productId };
 
     try {
-      const res = await fetch("/api/readproduct", {
+      const res = await fetch("/api/readProduct", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -35,9 +35,54 @@ const ReadProduct = () => {
     setProductData(null); // Clear the fetched data
   };
 
+  const renderProductDetails = () => {
+    if (!productData) return null;
+
+    return (
+      <div className="mt-6 w-full bg-green-50 rounded-lg shadow-md p-4 sm:p-6 max-w-4xl mx-auto">
+        <h3 className="text-2xl font-semibold text-green-700 mb-4 text-center">
+          Product Details
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <tbody>
+              {Object.entries(productData).map(([key, value]) => (
+                <tr key={key} className="border-b border-green-100">
+                  <td className="px-4 py-2 font-semibold text-gray-700 capitalize bg-green-100">
+                    {key.replace(/([A-Z])/g, " $1")}
+                  </td>
+                  <td className="px-4 py-2 text-gray-700">
+                    {typeof value === "object" && value !== null ? (
+                      <table className="w-full border-collapse mt-2">
+                        <tbody>
+                          {Object.entries(value).map(([subKey, subValue]) => (
+                            <tr key={subKey}>
+                              <td className="px-4 py-1 font-medium text-gray-600 capitalize bg-green-50">
+                                {subKey.replace(/([A-Z])/g, " $1")}
+                              </td>
+                              <td className="px-4 py-1 text-gray-600">
+                                {subValue}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      value
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="bg-gradient-to-b from-green-300 to-green-100 min-h-screen flex items-center justify-center p-6">
-      <div className="bg-transparent p-8 rounded-lg max-w-sm w-full">
+    <div className="bg-gradient-to-b from-green-300 to-green-100 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8">
+      <div className="bg-transparent p-6 rounded-lg w-full max-w-lg mx-auto">
         <h2 className="text-3xl font-bold text-green-800 mb-6 text-center">
           Read Product
         </h2>
@@ -53,7 +98,7 @@ const ReadProduct = () => {
               type="text"
               id="productId"
               name="productId"
-              className="w-full px-4 py-2 bg-transparent text-green-800 placeholder-green-500 border-2 border-green-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-200"
+              className="w-full px-4 py-2 bg-transparent text-green-800 placeholder-green-500 border border-green-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-200"
               value={productId}
               onChange={(e) => setProductId(e.target.value)}
               placeholder="e.g., Product-01"
@@ -78,21 +123,7 @@ const ReadProduct = () => {
           </div>
         </form>
 
-        {/* Conditionally render product data */}
-        {productData && (
-          <div className="mt-6 p-6 bg-green-50 rounded-lg shadow-md">
-            <h3 className="text-xl font-semibold text-green-700 mb-4">
-              Product Details
-            </h3>
-            <ul className="text-gray-700">
-              {Object.entries(productData).map(([key, value]) => (
-                <li key={key} className="mb-2">
-                  <strong>{key}:</strong> {value}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {renderProductDetails()}
       </div>
     </div>
   );

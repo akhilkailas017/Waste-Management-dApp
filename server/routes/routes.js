@@ -260,5 +260,63 @@ router.post("/deleteProduct", async (req, res) => {
   }
 });
 
+router.post("/queryAllWaste", async (req, res) => {
+  try {
+    let WasteCollectionCompanyClient = new clientApplication();
+    let waste = await WasteCollectionCompanyClient.submitTxn(
+      "WasteCollectionCompany",
+      "managementchannel",
+      "basic",
+      "collectionContract",
+      "queryTxn",
+      "",
+      "queryAllWaste"
+    );
+    const data = new TextDecoder().decode(waste);
+    const value = JSON.parse(data);
+
+    res.status(200).json({
+      success: true,
+      message: "data query successfully!",
+      data: { value },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Please check the ID!",
+      data: { error },
+    });
+  }
+});
+
+router.post("/queryAllProduct", async (req, res) => {
+  try {
+    let manufacturerClient = new clientApplication();
+    let products = await manufacturerClient.submitTxn(
+      "manufacturer",
+      "managementchannel",
+      "basic",
+      "collectionContract",
+      "queryTxn",
+      "",
+      "queryAllProduct"
+    );
+    const data = new TextDecoder().decode(products);
+    const value = JSON.parse(data);
+
+    res.status(200).json({
+      success: true,
+      message: "data read successfully!",
+      data: { value },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Please check the ID!",
+      data: { error },
+    });
+  }
+});
+
 
 module.exports = router;

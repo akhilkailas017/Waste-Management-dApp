@@ -4,11 +4,10 @@ import { toast } from "react-toastify";
 const QueryAllWaste = () => {
   const [wasteData, setWasteData] = useState(null);
 
-  // UseEffect to trigger the data fetch on page load
   useEffect(() => {
     const fetchWasteData = async () => {
       try {
-        const res = await fetch("/api/queryallwaste", {
+        const res = await fetch("/api/queryAllWaste", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -17,7 +16,7 @@ const QueryAllWaste = () => {
 
         const result = await res.json();
         if (result.success) {
-          setWasteData(result.data);
+          setWasteData(result.data.value); // Access the "value" array directly
           toast.success("Waste data retrieved successfully");
         } else {
           toast.error("No waste data found");
@@ -28,40 +27,54 @@ const QueryAllWaste = () => {
     };
 
     fetchWasteData();
-  }, []); // Empty dependency array ensures this runs once on component mount
+  }, []);
 
   return (
     <div className="bg-gradient-to-b from-green-300 to-green-100 min-h-screen flex items-center justify-center p-6">
-      <div className="bg-transparent p-8 rounded-lg max-w-sm w-full">
+      <div className="bg-transparent p-8 rounded-lg max-w-4xl w-full">
         <h2 className="text-3xl font-bold text-green-800 mb-6 text-center">
           All Waste
         </h2>
 
-        {/* Conditionally render waste data */}
-        {wasteData && wasteData.length > 0 && (
-          <div className="mt-6 p-6 bg-green-50 rounded-lg shadow-md">
+        {/* Display waste data in a table format if data is available */}
+        {wasteData && wasteData.length > 0 ? (
+          <div className="overflow-x-auto bg-green-50 p-6 rounded-lg shadow-md">
             <h3 className="text-xl font-semibold text-green-700 mb-4">
-              All Waste Data
+              Waste Data
             </h3>
-            <ul className="text-gray-700">
-              {wasteData.map((waste, index) => (
-                <li key={index} className="mb-2">
-                  <strong>Waste ID:</strong> {waste.wasteId} <br />
-                  <strong>Asset Type:</strong> {waste.assetType} <br />
-                  {/* Add any other waste details as needed */}
-                </li>
-              ))}
-            </ul>
+            <table className="min-w-full border border-green-300">
+              <thead>
+                <tr className="bg-green-200">
+                  <th className="px-4 py-2 border-b border-green-300">Waste ID</th>
+                  <th className="px-4 py-2 border-b border-green-300">Total weight</th>
+                  <th className="px-4 py-2 border-b border-green-300">collection Company</th>
+                  <th className="px-4 py-2 border-b border-green-300">Owner</th>
+                  <th className="px-4 py-2 border-b border-green-300">Status</th>
+                  <th className="px-4 py-2 border-b border-green-300">Usable Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {wasteData.map((waste, index) => (
+                  <tr key={index} className="bg-white">
+                    <td className="px-4 py-2 border-b border-green-300">{waste.Key}</td>
+                    <td className="px-4 py-2 border-b border-green-300">{waste.Record.totalWeight}</td>
+                    <td className="px-4 py-2 border-b border-green-300">{waste.Record.collectionCompany}</td>
+                    <td className="px-4 py-2 border-b border-green-300">{waste.Record.owner}</td>
+                    <td className="px-4 py-2 border-b border-green-300">{waste.Record.status}</td>
+                    <td className="px-4 py-2 border-b border-green-300">{waste.Record.usablePercentage}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-
-        {/* If no data found */}
-        {wasteData && wasteData.length === 0 && (
+        ) : (
           <div className="mt-6 p-6 bg-red-50 rounded-lg shadow-md">
             <h3 className="text-xl font-semibold text-red-700 mb-4">
               No Waste Data Found
             </h3>
-            <p className="text-gray-700">There is no waste data available at the moment.</p>
+            <p className="text-gray-700">
+              There is no waste data available at the moment.
+            </p>
           </div>
         )}
       </div>
