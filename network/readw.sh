@@ -13,5 +13,6 @@ export WasteCollectionCompany_PEER_TLSROOTCERT=${PWD}/organizations/peerOrganiza
 export government_PEER_TLSROOTCERT=${PWD}/organizations/peerOrganizations/government.management.com/peers/peer0.government.management.com/tls/ca.crt
 export recyclingCenter_PEER_TLSROOTCERT=${PWD}/organizations/peerOrganizations/recyclingCenter.management.com/peers/peer0.recyclingCenter.management.com/tls/ca.crt
 sleep 3
-peer chaincode query -C $CHANNEL_NAME -n basic -c '{"function":"readWaste","Args":["waste-01"]}'
+# peer chaincode query -C $CHANNEL_NAME -n basic -c '{"function":"readWaste","Args":["waste-01"]}'
+peer chaincode query -C $CHANNEL_NAME -n basic -c '{"function":"readWaste","Args":["AK01"]}'
 sleep 3

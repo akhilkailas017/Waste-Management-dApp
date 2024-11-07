@@ -309,3 +309,6 @@ sleep 1
 peer lifecycle chaincode querycommitted --channelID $CHANNEL_NAME --name basic --cafile $ORDERER_CA
 
 echo "—---------------Completed—-------------"
+
+
+# -signature-policy "AND('Org1.member', 'Org2.member')"
