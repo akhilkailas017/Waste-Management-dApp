@@ -22,7 +22,8 @@ const CreateWaste = () => {
 
   const addWaste = async (newWaste) => {
     try {
-      const res = await fetch('/api/createwaste', {
+      console.log(newWaste)
+      const res = await fetch('/api/createWaste', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -7,12 +7,10 @@ const ReadWaste = () => {
 
   const submitForm = async (e) => {
     e.preventDefault();
-    const readDetails = {
-      wasteId,
-    };
+    const readDetails = { wasteId };
 
     try {
-      const res = await fetch("/api/readwaste", {
+      const res = await fetch("/api/readWaste", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -35,6 +33,37 @@ const ReadWaste = () => {
   const resetForm = () => {
     setWasteId(""); // Clear the input field
     setWasteData(null); // Clear the fetched data
+  };
+
+  const renderWasteDetails = () => {
+    if (!wasteData) return null;
+
+    return (
+      <div className="mt-6 p-6 bg-green-50 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold text-green-700 mb-4">Waste Details</h3>
+        <ul className="text-gray-700 space-y-2">
+          {Object.entries(wasteData).map(([key, value]) => (
+            <li key={key} className="flex items-start space-x-2">
+              <span className="font-semibold capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
+              <span>
+                {typeof value === "object" && value !== null ? (
+                  <ul className="pl-4">
+                    {Object.entries(value).map(([subKey, subValue]) => (
+                      <li key={subKey} className="flex items-start space-x-2">
+                        <span className="font-semibold capitalize">{subKey.replace(/([A-Z])/g, ' $1')}:</span>
+                        <span>{subValue}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  value
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
   };
 
   return (
@@ -80,21 +109,7 @@ const ReadWaste = () => {
           </div>
         </form>
 
-        {/* Conditionally render waste data */}
-        {wasteData && (
-          <div className="mt-6 p-6 bg-green-50 rounded-lg shadow-md">
-            <h3 className="text-xl font-semibold text-green-700 mb-4">
-              Waste Details
-            </h3>
-            <ul className="text-gray-700">
-              {Object.entries(wasteData).map(([key, value]) => (
-                <li key={key} className="mb-2">
-                  <strong>{key}:</strong> {value}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {renderWasteDetails()}
       </div>
     </div>
   );
