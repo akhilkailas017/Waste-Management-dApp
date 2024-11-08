@@ -22,7 +22,7 @@ const CreateVoucher = () => {
 
   const createVoucher = async (voucherData) => {
     try {
-      const res = await fetch('/api/createvoucher', {
+      const res = await fetch('/api/createVoucher', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ const CreateVoucher = () => {
       if (result.success) {
         toast.success(`${result.message}`);
       } else {
-        toast.error(`Error: ${result.message}`);
+        toast.success(`${result.message}`);
       }
     } catch (error) {
       toast.error("Error: Unable to create voucher.");

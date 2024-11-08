@@ -7,23 +7,21 @@ const ReadVoucher = () => {
 
   const submitForm = async (e) => {
     e.preventDefault();
-    const readDetails = { voucherId };
 
     try {
-      const res = await fetch("/api/readvoucher", {
-        method: "POST",
+      const res = await fetch(`/api/readVoucher?voucherId=${voucherId}`, {
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(readDetails),
       });
 
       const result = await res.json();
-      if (result.success) {
-        setVoucherData(result.data);
+      if (res.ok) {
+        setVoucherData(result);
         toast.success("Voucher data retrieved successfully");
       } else {
-        toast.error(`Voucher ID ${voucherId} does not exist`);
+        toast.error(result.message || `Voucher ID ${voucherId} does not exist`);
       }
     } catch (error) {
       toast.error("An error occurred while fetching the voucher data");

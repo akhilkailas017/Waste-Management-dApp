@@ -320,81 +320,61 @@ router.post("/queryAllProduct", async (req, res) => {
 
 
 router.post("/createVoucher", async (req, res) => {
+  const { voucherId, wasteId, type, amount } = req.body;
+  let userClient = new clientApplication();
+  if (!voucherId || !wasteId || !type || !amount) {
+      return res.status(400).json({ message: "All fields are required." });
+  }
+
   try {
-    const { voucherId, wasteId, type, amount } = req.body;
+      const transientData = {
+          wasteId: Buffer.from(wasteId),
+          type: Buffer.from(type),
+          amount: Buffer.from(amount),
+      };
+      console.log("transient data",transientData);
+      
+      const result = await userClient.submitTxn(
+          "government",
+          "managementchannel",
+          "basic",
+          "govContract",
+          "privateTxn",
+          transientData,
+          "createVoucher",
+          voucherId
+      );
 
-    let governmentClient = new clientApplication();
-
-    // Prepare transient data
-    const transientData = new Map();
-    transientData.set("wasteId", Buffer.from(wasteId));  // Ensure wasteId is valid
-    transientData.set("type", Buffer.from(type));        // Ensure type is valid
-    transientData.set("amount", Buffer.from(amount));    // Ensure amount is valid
-
-    // Debug: log transient data to ensure it's set correctly
-    console.log("Transient Data:", transientData);
-
-    const result = await governmentClient.submitTxn(
-      "government", // Organization (government)
-      "managementchannel", // Channel name
-      "basic", // Chaincode name (ensure your contract supports this)
-      "govContract", // Contract name
-      "privateTxn", // Transaction type (private)
-      transientData, // Transient data
-      "createVoucher", // Function name
-      voucherId // Pass voucherId
-    );
-
-    res.status(201).json({
-      success: true,
-      message: "Voucher created successfully!",
-      data: { result },
-    });
+      res.status(200).json({ message: "created successfully.", result: new TextDecoder().decode(result) });
   } catch (error) {
-    // Debug: log error to understand the issue
-    console.error("Error creating voucher:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error creating voucher!",
-      data: { error },
-    });
+      console.error("Error creating order:", error);
+      res.status(500).json({ message: "Error creating.", error: error.message });
   }
 });
 
-router.post("/readVoucher", async (req, res) => {
+
+router.get("/readVoucher", async (req, res) => {
+  // const { voucherId } = req.body;
+  const { voucherId } = req.query;
+  let userClient = new clientApplication();
+
   try {
-    const { voucherId } = req.body;
+      const result = await userClient.submitTxn(
+          "government",
+          "managementchannel",
+          "basic",
+          "govContract",
+          "queryTxn",
+          "",
+          "readVoucher",
+          voucherId
+      );
 
-    let governmentClient = new clientApplication();
-
-    const result = await governmentClient.submitTxn(
-      "government", // Organization (government)
-      "managementchannel", // Channel name
-      "basic", // Chaincode name
-      "govContract", // Contract name
-      "queryTxn", // Transaction type
-      "", // No transient data for querying
-      "readVoucher", // Function name
-      voucherId // Pass voucherId for querying
-    );
-
-    // Decode the result (ensure it returns a Buffer to decode)
-    const decodedString = new TextDecoder().decode(result);
-    const jsonObject = JSON.parse(decodedString);
-
-    res.status(200).json({
-      success: true,
-      message: "Voucher details retrieved successfully!",
-      data: { value: jsonObject },
-    });
+      const decodedResult = new TextDecoder().decode(result);
+      res.status(200).json(JSON.parse(decodedResult));
   } catch (error) {
-    // Debug: log error to understand the issue
-    console.error("Error retrieving voucher:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error retrieving voucher details!",
-      data: { error },
-    });
+      console.error("Error reading :", error);
+      res.status(500).json({ message: `Error reading  ${voucherId}.`, error: error.message });
   }
 });
 
