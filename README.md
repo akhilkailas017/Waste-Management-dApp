@@ -64,6 +64,10 @@ cd waste-management-dapp
    ./startNetwork.sh
    ```
    This will bring up the Hyperledger Fabric network with the required organizations.
+4. Stop the network:
+   ```bash
+   ./stopNetwork.sh
+   ```
 
 ### 3. Start the Server
 
