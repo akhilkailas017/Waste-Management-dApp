@@ -104,14 +104,14 @@ cd waste-management-dapp
 - **Security**: Data encryption and access controls via Hyperledger Fabric, with private data collections securing sensitive information.
 - **Sustainability**: Enables manufacturers to responsibly source waste for production, promoting eco-friendly initiatives.
 
-## 🎥 Project Demo
+<!-- ## 🎥 Project Demo
 
 Watch this quick demo to understand how the Waste Management dApp works in action:
 
-[![Waste Management dApp Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+[![Waste Management dApp Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/hqresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
 
 Click the image to watch on YouTube, or [watch directly here](https://www.youtube.com/watch?v=YOUR_VIDEO_ID).
-
+ -->
 
 ## 🤝 Contributing
 
