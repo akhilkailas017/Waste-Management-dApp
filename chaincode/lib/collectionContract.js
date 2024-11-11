@@ -27,6 +27,7 @@ class collectionContract extends Contract {
             };
             const buffer = Buffer.from(JSON.stringify(product));
             await ctx.stub.putState(wasteId, buffer);
+            ctx.stub.setEvent('WasteCreated', Buffer.from(JSON.stringify(product)));
         } else {
             return `User under the following MSP: ${mspID} cannot perform this action`;
         }
@@ -49,6 +50,7 @@ class collectionContract extends Contract {
                 throw new Error(`The product ${wasteId} does not exist`);
             }
             await ctx.stub.deleteState(wasteId);
+            ctx.stub.setEvent('WasteDeleted', Buffer.from(JSON.stringify({ wasteId })));
         } else {
             return `User under the following MSP: ${mspID} cannot perform this action`;
         }
@@ -77,6 +79,7 @@ class collectionContract extends Contract {
         const updatedBuffer = Buffer.from(JSON.stringify(waste));
         await ctx.stub.putState(wasteId, updatedBuffer);
         console.log(`Waste with ID ${wasteId} updated successfully with reusable weight and usable percentage.`);
+        ctx.stub.setEvent('WasteUpdated', Buffer.from(JSON.stringify(waste)));
         return `Waste with ID ${wasteId} updated successfully with reusable weight and usable percentage.`;
     }
 
@@ -97,6 +100,7 @@ class collectionContract extends Contract {
         const updatedBuffer = Buffer.from(JSON.stringify(waste));
         await ctx.stub.putState(wasteId, updatedBuffer);
         console.log(`Waste with ID ${wasteId} bought successfully.`);
+        ctx.stub.setEvent('WasteBought', Buffer.from(JSON.stringify({ wasteId, owner })));
         return `Waste with ID ${wasteId} bought successfully.`;
     }
 
@@ -121,6 +125,7 @@ class collectionContract extends Contract {
             };
             const buffer = Buffer.from(JSON.stringify(product));
             await ctx.stub.putState(productId, buffer);
+            ctx.stub.setEvent('ProductCreated', Buffer.from(JSON.stringify(product)));
         } else {
             return `User under the following MSP: ${mspID} cannot perform this action`;
         }
@@ -143,6 +148,7 @@ class collectionContract extends Contract {
                 throw new Error(`The product ${productId} does not exist`);
             }
             await ctx.stub.deleteState(productId);
+            ctx.stub.setEvent('ProductDeleted', Buffer.from(JSON.stringify({ productId })));
         } else {
             return `User under the following MSP: ${mspID} cannot perform this action`;
         }
@@ -213,6 +219,7 @@ class collectionContract extends Contract {
             const updatedData = Buffer.from(JSON.stringify(wasteDetails));
             console.log("updatedData:", updatedData);
             await ctx.stub.putState(wasteId, updatedData);
+            ctx.stub.setEvent('VoucherUsed', Buffer.from(JSON.stringify({ wasteId, voucherId })));
             console.log(`Updated waste ${wasteId} with used voucher status`);
             await govContractInstance.deleteVoucher(ctx, voucherId);
             console.log(`Deleted voucher ${voucherId} after use`);
@@ -221,6 +228,37 @@ class collectionContract extends Contract {
             console.error(`Error in useVoucher function: ${error.message}`);
             throw new Error(`Failed to use voucher: ${error.message}`);
         }
+    }
+
+    async getHistoryForAsset(ctx, assetId) {
+        console.log(`Fetching history for asset: ${assetId}`);
+        const iterator = await ctx.stub.getHistoryForKey(assetId);
+        const history = [];
+        
+        while (true) {
+            const res = await iterator.next();
+            if (res.value) {
+                const record = {
+                    txId: res.value.txId,
+                    timestamp: res.value.timestamp,
+                    isDelete: res.value.isDelete,
+                    value: null
+                };
+                
+                if (!res.value.isDelete) {
+                    record.value = JSON.parse(res.value.value.toString('utf8'));
+                }
+                
+                history.push(record);
+            }
+            if (res.done) {
+                console.log(`History fetched for asset: ${assetId}`);
+                await iterator.close();
+                break;
+            }
+        }
+        
+        return history;
     }
     
     

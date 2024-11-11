@@ -64,6 +64,22 @@ class govContract extends Contract {
     }
 
 
+    // async listVouchers(ctx) {
+    //     const query = {
+    //         selector: {
+    //             assetType: 'voucher'
+    //         }
+    //     };
+    //     const collectionName = await getCollectionName(ctx);
+    //     const result = await ctx.stub.getPrivateDataQueryResult(collectionName, JSON.stringify(query));
+    //     const vouchers = [];
+    //     for await (const record of result) {
+    //         const recordData = JSON.parse(record.value.toString('utf8'));
+    //         vouchers.push(recordData);
+    //     }
+    //     return vouchers;
+    // }
+
     async listVouchers(ctx) {
         const query = {
             selector: {
@@ -71,11 +87,21 @@ class govContract extends Contract {
             }
         };
         const collectionName = await getCollectionName(ctx);
-        const result = await ctx.stub.getPrivateDataQueryResult(collectionName, JSON.stringify(query));
+        const resultIterator = await ctx.stub.getPrivateDataQueryResult(collectionName, JSON.stringify(query));
         const vouchers = [];
-        for await (const record of result) {
-            const recordData = JSON.parse(record.value.toString('utf8'));
-            vouchers.push(recordData);
+        while (true) {
+            const res = await resultIterator.next();
+            if (res.value) {
+                const voucherRecord = {
+                    Key: res.value.key, // voucher ID
+                    Record: JSON.parse(res.value.value.toString('utf8')) // voucher data
+                };
+                vouchers.push(voucherRecord);
+            }
+            if (res.done) {
+                await resultIterator.close();
+                break;
+            }
         }
         return vouchers;
     }
