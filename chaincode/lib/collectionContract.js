@@ -187,29 +187,6 @@ class collectionContract extends Contract {
     }
 
 
-    // async useVoucher(ctx, wasteId, voucherId) {
-    //     const govContract = new govContract();
-    //     const wasteExist = await this.wasteExist(ctx, wasteId);
-    //     if (!wasteExist) {
-    //         throw new Error(`${wasteId} does not exist`);
-    //     }
-    //     const voucherExist = await govContract.voucherExist(ctx, voucherId);
-    //     if (!voucherExist) {
-    //         throw new Error(`The ${voucherId} does not exist`);
-    //     }
-    //     const wasteDetails = await this.readWaste(ctx, wasteId);
-    //     const voucherDetails = await govContract.readVoucher(ctx, voucherId);
-    //     if (voucherDetails.wasteId === wasteId) {
-    //         wasteDetails.voucherStatus = 'used';
-    //         const updatedData = Buffer.from(JSON.stringify(wasteDetails));
-    //         await ctx.stub.putState(wasteId, updatedData);
-    //         await govContract.deleteOrder(ctx, voucherId);
-    //         return `Voucher with ${wasteId} used`;
-    //     } else {
-    //         return 'details not matching';
-    //     }
-    // }
-
     async useVoucher(ctx, wasteId, voucherId) {
         try {
             const govContractInstance = new govContract();

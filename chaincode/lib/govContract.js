@@ -79,24 +79,6 @@ class govContract extends Contract {
         }
         return vouchers;
     }
-
-    // async useVoucher(ctx, voucherId) {
-    //     const mspid = ctx.clientIdentity.getMSPID();
-    //     if (mspid !== 'governmentMSP') {
-    //         throw new Error(`Organization with MSP ID ${mspid} is not authorized to use the voucher`);
-    //     }
-    //     const exists = await this.voucherExist(ctx, voucherId);
-    //     if (!exists) {
-    //         throw new Error(`The voucher with ID ${voucherId} does not exist`);
-    //     }
-    //     const collectionName = await getCollectionName(ctx);
-    //     const privateData = await ctx.stub.getPrivateData(collectionName, voucherId);
-    //     const voucher = JSON.parse(privateData.toString());
-    //     voucher.status = "used";
-    //     await ctx.stub.putPrivateData(collectionName, voucherId, Buffer.from(JSON.stringify(voucher)));
-    //     console.log(`Voucher with ID ${voucherId} used successfully.`);
-    //     return `Voucher with ID ${voucherId} used successfully.`;
-    // }
     
 }
 
