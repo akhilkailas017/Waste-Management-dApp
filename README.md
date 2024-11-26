@@ -112,7 +112,7 @@ cd waste-management-dapp
 
 Watch this quick demo to understand how the Waste Management dApp works in action:
 
-[![Waste Management dApp Demo](https://img.youtube.com/vi/4joqk-rdLUk/hqresdefault.jpg)](https://www.youtube.com/watch?v=4joqk-rdLUk)
+[![Waste Management dApp Demo](https://img.youtube.com/vi/4joqk-rdLUk/0.jpg)](https://www.youtube.com/watch?v=4joqk-rdLUk)
 
 Click the image to watch on YouTube, or [watch directly here](https://www.youtube.com/watch?v=4joqk-rdLUk).
 
